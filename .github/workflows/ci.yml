@@ -36,6 +36,7 @@ jobs:
         env:
           OPEN_CHOICE_READER_DATABASE_URL: sqlite:///./data/ci-migrations.db
         run: |
+          mkdir -p data
           python -m alembic upgrade head
           python -m alembic check
       - name: Lint backend

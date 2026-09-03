@@ -10,7 +10,7 @@ This checklist records the approval sequence for the initial public source repos
 - [x] Use **Open Choice Reader** as the project name and `Open-Choice-Reader` as the proposed repository slug.
 - [x] Use GitHub Private Vulnerability Reporting as the security channel.
 - [x] Route private conduct concerns through a maintainer's GitHub profile contact.
-- [ ] Confirm the owner controls the rights needed to publish and license all original code, prose, theme artwork, and branding in this candidate.
+- [x] Confirm the owner controls the rights needed to publish and license all original code, prose, theme artwork, and branding in this candidate.
 
 ## Technical gates
 
