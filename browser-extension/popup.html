@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Open Choice Reader</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="popup__header">
+        <p class="popup__eyebrow">Open Choice Reader</p>
+        <h1>Read this page</h1>
+        <p class="popup__copy">
+          Send the current article or highlighted text to your reader server, then open the live reader.
+        </p>
+      </header>
+
+      <section class="panel">
+        <div class="panel__heading">
+          <div>
+            <p class="panel__eyebrow">Quick tip</p>
+            <h2>Right-click for one-click handoff</h2>
+          </div>
+        </div>
+        <p class="panel__copy">
+          Right-click any page or highlighted selection to import or read it immediately without reopening this popup.
+        </p>
+      </section>
+
+      <section class="panel">
+        <label class="field">
+          <span>Reader server</span>
+          <input id="host-url" type="url" placeholder="http://127.0.0.1:8000" />
+        </label>
+        <button id="save-host" class="button button--ghost" type="button">Save host</button>
+      </section>
+
+      <section class="panel">
+        <div class="panel__heading">
+          <div>
+            <p class="panel__eyebrow">Page context</p>
+            <h2 id="page-title">Checking active tab...</h2>
+          </div>
+          <span id="selection-badge" class="badge">No selection</span>
+        </div>
+        <p id="page-url" class="panel__copy">Open a normal webpage tab to use the extension.</p>
+        <p id="selection-preview" class="selection-preview">Highlight text on the page if you want to start reading from a specific point.</p>
+      </section>
+
+      <section class="panel panel--grid">
+        <label class="field">
+          <span>Live voice</span>
+          <select id="voice-option">
+            <option value="">Use app default</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Playback speed</span>
+          <input id="playback-speed" type="number" min="0.5" max="8" step="0.05" value="1.00" />
+        </label>
+      </section>
+
+      <section class="panel">
+        <div class="panel__heading">
+          <div>
+            <p class="panel__eyebrow">Read now</p>
+            <h2>Open the reader immediately</h2>
+          </div>
+        </div>
+        <div class="action-grid">
+          <button id="read-page" class="button" type="button">Read full page</button>
+          <button id="read-selection" class="button button--ghost" type="button">Read selection</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel__heading">
+          <div>
+            <p class="panel__eyebrow">Import only</p>
+            <h2>Save to the library first</h2>
+          </div>
+        </div>
+        <div class="action-grid">
+          <button id="import-page" class="button button--ghost" type="button">Import page</button>
+          <button id="import-selection" class="button button--ghost" type="button">Import selection</button>
+        </div>
+      </section>
+
+      <footer class="popup__footer">
+        <button id="open-app" class="button button--ghost" type="button">Open app</button>
+        <p id="status-message" class="status-message" aria-live="polite"></p>
+      </footer>
+    </main>
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>

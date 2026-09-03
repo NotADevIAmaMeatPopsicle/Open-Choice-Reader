@@ -1,0 +1,31 @@
+# Exact files and directory prefixes allowed in the public candidate.
+# A trailing slash permits every non-ignored file below that directory.
+.gitattributes
+.github/
+.gitignore
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+LICENSE
+README.md
+SECURITY.md
+public-files.allowlist
+backend/.env.example
+backend/LICENSE
+backend/MANIFEST.in
+backend/README.md
+backend/alembic.ini
+backend/alembic/
+backend/app/
+backend/pyproject.toml
+backend/scripts/
+backend/tests/
+browser-extension/
+docs/
+frontend/index.html
+frontend/package-lock.json
+frontend/package.json
+frontend/public/
+frontend/src/
+frontend/tsconfig.json
+frontend/vite.config.ts
+scripts/

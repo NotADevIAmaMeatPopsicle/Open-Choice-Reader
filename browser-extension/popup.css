@@ -1,0 +1,153 @@
+:root {
+  color-scheme: dark;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #161311;
+  color: #f7efe5;
+}
+
+.popup {
+  width: 360px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background:
+    radial-gradient(circle at top right, rgba(181, 121, 70, 0.22), transparent 38%),
+    linear-gradient(180deg, #201915 0%, #15110f 100%);
+}
+
+.popup__header,
+.panel,
+.popup__footer {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 20px 36px rgba(0, 0, 0, 0.28);
+}
+
+.popup__header,
+.panel {
+  padding: 12px;
+}
+
+.popup__eyebrow,
+.panel__eyebrow {
+  margin: 0 0 4px;
+  color: #d7b28a;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+
+.popup__header h1,
+.panel__heading h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.popup__copy,
+.panel__copy,
+.selection-preview,
+.status-message {
+  margin: 8px 0 0;
+  color: #cfbfaf;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.panel {
+  display: grid;
+  gap: 10px;
+}
+
+.panel--grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.panel__heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.field span {
+  color: #f7efe5;
+  font-weight: 600;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+  color: #fff7ef;
+  padding: 10px 12px;
+  box-sizing: border-box;
+}
+
+.badge {
+  align-self: flex-start;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(85, 124, 104, 0.25);
+  color: #dff8e6;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge--muted {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cfbfaf;
+}
+
+.selection-preview {
+  min-height: 2.5em;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.button {
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2bb673 0%, #1a8f59 100%);
+  color: white;
+  font-weight: 700;
+  padding: 11px 12px;
+  cursor: pointer;
+}
+
+.button:hover:enabled {
+  filter: brightness(1.06);
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.button--ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff7ef;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.popup__footer {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}

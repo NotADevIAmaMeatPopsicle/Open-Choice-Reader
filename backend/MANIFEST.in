@@ -1,0 +1,7 @@
+include README.md
+include pyproject.toml
+prune alembic
+prune tests
+prune data
+global-exclude *.py[cod]
+global-exclude __pycache__

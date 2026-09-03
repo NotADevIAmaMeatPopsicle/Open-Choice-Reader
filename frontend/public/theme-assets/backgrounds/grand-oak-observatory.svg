@@ -1,0 +1,35 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='1200' viewBox='0 0 1600 1200'>
+  <defs>
+    <linearGradient id='bg' x1='0' y1='0' x2='0' y2='1'>
+      <stop offset='0%' stop-color='#28324c'/>
+      <stop offset='100%' stop-color='#0f1117'/>
+    </linearGradient>
+    <radialGradient id='glowA' cx='20%' cy='18%' r='38%'>
+      <stop offset='0%' stop-color='#d4a467' stop-opacity='0.62'/>
+      <stop offset='100%' stop-color='#d4a467' stop-opacity='0'/>
+    </radialGradient>
+    <radialGradient id='glowB' cx='82%' cy='16%' r='30%'>
+      <stop offset='0%' stop-color='#e5bd86' stop-opacity='0.30'/>
+      <stop offset='100%' stop-color='#e5bd86' stop-opacity='0'/>
+    </radialGradient>
+  </defs>
+  <rect width='1600' height='1200' fill='url(#bg)'/>
+  <rect width='1600' height='1200' fill='url(#glowA)'/>
+  <rect width='1600' height='1200' fill='url(#glowB)'/>
+  <g opacity='0.20' fill='#43322b'>
+    <path d='M80 1100V310c0-26 22-48 48-48h250c28 0 50 22 50 48v790z'/>
+    <path d='M500 1100V220c0-26 22-48 48-48h260c28 0 50 22 50 48v880z'/>
+    <path d='M920 1100V280c0-26 22-48 48-48h260c28 0 50 22 50 48v820z'/>
+    <path d='M1320 1100V350c0-26 22-48 48-48h150c28 0 50 22 50 48v750z'/>
+  </g>
+  <g opacity='0.16' stroke='#e5bd86' stroke-width='4' fill='none'>
+    <path d='M0 220 C 260 180, 420 260, 700 220 S 1140 170, 1600 240'/>
+    <path d='M0 1040 C 260 980, 420 1080, 700 1020 S 1140 970, 1600 1030'/>
+  </g>
+  <g opacity='0.12'>
+    <circle cx='250' cy='170' r='8' fill='#e5bd86'/>
+    <circle cx='320' cy='210' r='5' fill='#e5bd86'/>
+    <circle cx='1210' cy='150' r='7' fill='#e5bd86'/>
+    <circle cx='1290' cy='220' r='4' fill='#e5bd86'/>
+  </g>
+</svg>

@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Open Choice Reader",
+  "version": "0.1.0",
+  "description": "Send the current page or selected text to your Open Choice Reader server.",
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Open Choice Reader"
+  },
+  "permissions": [
+    "activeTab",
+    "contextMenus",
+    "scripting",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ]
+}

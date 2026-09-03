@@ -1,0 +1,130 @@
+:root {
+  color-scheme: dark;
+  font-family: "Segoe UI", "Aptos", sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  --color-bg: #151413;
+  --color-bg-elevated: #1b1918;
+  --color-panel: rgba(25, 24, 23, 0.94);
+  --color-panel-strong: #23201e;
+  --color-panel-soft: rgba(39, 34, 31, 0.86);
+  --color-text: #f7f2ea;
+  --color-text-muted: #c7b7a2;
+  --color-border: rgba(236, 213, 182, 0.12);
+  --color-accent: #d7a24c;
+  --color-accent-strong: #9b6b23;
+  --color-danger: #ffb4ab;
+  --color-success: #7dd3a5;
+  --color-shadow: rgba(0, 0, 0, 0.32);
+  --color-shelf-dark: #2b1f16;
+  --color-shelf-light: #4d3525;
+  --theme-glow-left: rgba(215, 162, 76, 0.18);
+  --theme-glow-right: rgba(116, 74, 38, 0.34);
+  --surface-shell: color-mix(in srgb, var(--color-panel) 88%, var(--color-bg) 12%);
+  --surface-shell-strong: color-mix(in srgb, var(--color-panel-strong) 88%, var(--color-bg) 12%);
+  --surface-shell-soft: color-mix(in srgb, var(--color-panel-soft) 82%, var(--color-bg) 18%);
+  --surface-shell-glass: color-mix(in srgb, var(--color-panel-soft) 64%, transparent);
+  --surface-input: color-mix(in srgb, var(--color-panel-strong) 74%, var(--color-bg) 26%);
+  --surface-input-soft: color-mix(in srgb, var(--color-panel) 72%, var(--color-bg) 28%);
+  --surface-ghost: color-mix(in srgb, var(--color-panel-soft) 52%, transparent);
+  --surface-elevated: color-mix(in srgb, var(--color-panel-strong) 92%, var(--color-bg) 8%);
+  --surface-inset: color-mix(in srgb, var(--color-bg-elevated) 78%, transparent);
+  --surface-accent-soft: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  --surface-accent-strong: color-mix(in srgb, var(--color-accent) 28%, transparent);
+  --surface-success-soft: color-mix(in srgb, var(--color-success) 18%, transparent);
+  --surface-danger-soft: color-mix(in srgb, var(--color-danger) 18%, transparent);
+  --surface-warning-soft: color-mix(in srgb, #facc15 18%, transparent);
+  --surface-neutral-soft: color-mix(in srgb, var(--color-text) 8%, transparent);
+  --surface-overlay-top: color-mix(in srgb, var(--color-bg) 82%, var(--color-panel-strong) 18%);
+  --surface-overlay-bottom: color-mix(in srgb, var(--color-bg) 94%, var(--color-bg-elevated) 6%);
+  --shadow-lifted: 0 18px 40px var(--color-shadow);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 2.5rem;
+
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
+  --content-width: 110rem;
+  --sidebar-width: 112px;
+  --theme-background-image: none;
+  --theme-background-overlay: none;
+  --theme-shelf-image: none;
+  --theme-surface-texture: none;
+}
+
+:root[data-theme="ocean"] {
+  --color-bg: #10171c;
+  --color-bg-elevated: #172229;
+  --color-panel: rgba(18, 28, 34, 0.94);
+  --color-panel-strong: #21313a;
+  --color-panel-soft: rgba(27, 44, 52, 0.86);
+  --color-text: #eef7fb;
+  --color-text-muted: #b6ccd6;
+  --color-border: rgba(162, 202, 222, 0.16);
+  --color-accent: #5bc0d1;
+  --color-accent-strong: #2a7f95;
+  --color-shelf-dark: #18303d;
+  --color-shelf-light: #294e5b;
+}
+
+:root[data-theme="forest"] {
+  --color-bg: #131814;
+  --color-bg-elevated: #1a211b;
+  --color-panel: rgba(23, 30, 24, 0.95);
+  --color-panel-strong: #283329;
+  --color-panel-soft: rgba(33, 44, 34, 0.86);
+  --color-text: #f4f7ef;
+  --color-text-muted: #c4d1c0;
+  --color-border: rgba(181, 212, 164, 0.14);
+  --color-accent: #93c572;
+  --color-accent-strong: #557b3f;
+  --color-shelf-dark: #23311f;
+  --color-shelf-light: #42583a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    var(--theme-background-overlay),
+    var(--theme-background-image),
+    radial-gradient(circle at top left, var(--theme-glow-left), transparent 28%),
+    radial-gradient(circle at top right, var(--theme-glow-right), transparent 32%),
+    linear-gradient(180deg, var(--surface-overlay-top) 0%, var(--surface-overlay-bottom) 100%);
+  background-position: center top, center top, left top, right top, center top;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+  background-size: cover, cover, auto, auto, auto;
+  color: var(--color-text);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
