@@ -31,6 +31,6 @@ This checklist records the approval sequence for the initial public source repos
 - [x] Create a new, empty GitHub repository as **PRIVATE**.
 - [x] Push only the approved candidate `main` branch, never `--all` or `--mirror`.
 - [x] Confirm local and remote commits and file sets match and that no other branches or tags exist.
-- [ ] Obtain a separate explicit approval before changing visibility to public.
+- [x] Obtain a separate explicit approval before changing visibility to public.
 - [ ] Immediately after an approved public change, verify anonymous access and enable GitHub Private Vulnerability Reporting.
 - [ ] Enable and verify available GitHub security features, including Dependabot alerts/security updates and secret scanning or push protection where the repository visibility and account plan support them.

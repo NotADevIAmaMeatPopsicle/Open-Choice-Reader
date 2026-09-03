@@ -2,7 +2,7 @@
 
 Open Choice Reader is a self-hosted document library and read-aloud application. It imports text, Markdown, HTML, EPUB, and PDF files; supports public-domain catalog and article imports; and can generate speech with local Piper, Kokoro, or Qwen-based voice-cloning runtimes. It is intended for people who want control over their library, audio, and choice of speech engine rather than sending their documents to a hosted reading service.
 
-This private candidate repository is being prepared for its first public release. It currently has no release or published package. Changing repository visibility or publishing release artifacts remains subject to final owner approval.
+Open Choice Reader is in its early public-release stage. It currently has no packaged release or published Python or npm package; installation is from source while the project matures.
 
 ## Components
 
