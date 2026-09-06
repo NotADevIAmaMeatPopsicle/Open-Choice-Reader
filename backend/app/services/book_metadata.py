@@ -11,7 +11,15 @@ from app.parsers.base import ParsedDocument
 from app.services.remote_fetch import fetch_remote_resource
 
 
-GUTENBERG_ID_PATTERN = re.compile(r"(?:^|[^0-9])(?:pg|gutenberg[-_])?(\d{1,6})(?:[-_](?:images|noimages|0))?(?=\.|[^0-9]|$)", re.IGNORECASE)
+GUTENBERG_PREFIXED_ID_PATTERN = re.compile(
+    r"(?:^|[^a-z0-9])(?:pg|gutenberg[-_])(\d{1,6})"
+    r"(?:[-_](?:images|noimages|0))?(?=\.|[^0-9]|$)",
+    re.IGNORECASE,
+)
+GUTENBERG_NUMERIC_FILENAME_PATTERN = re.compile(
+    r"^(\d{1,6})(?:[-_](?:images|noimages|0))?(?:\.[a-z0-9]+)*$",
+    re.IGNORECASE,
+)
 TOP_ENTRY_PATTERN = re.compile(r"<li>\s*<a href=\"/ebooks/(?P<book_id>\d+)\">(?P<label>[^<]+)</a>", re.IGNORECASE)
 DOWNLOAD_LINK_PATTERN = re.compile(r"href=\"(?P<href>[^\"]+)\"[^>]*type=\"(?P<media_type>[^\"]+)\"", re.IGNORECASE)
 
@@ -162,21 +170,32 @@ def resolve_external_metadata(
 
 
 def detect_gutenberg_id(*, filename: Path, origin_path: Path | None, title: str | None) -> int | None:
-    for candidate in (
+    filename_candidates = (
         filename.name,
         filename.stem,
-        str(origin_path) if origin_path is not None else None,
-        title,
-    ):
+        origin_path.name if origin_path is not None else None,
+        origin_path.stem if origin_path is not None else None,
+    )
+    for candidate in filename_candidates:
         if not candidate:
             continue
-        match = GUTENBERG_ID_PATTERN.search(str(candidate))
+        match = GUTENBERG_PREFIXED_ID_PATTERN.search(str(candidate))
+        if match is None:
+            match = GUTENBERG_NUMERIC_FILENAME_PATTERN.fullmatch(str(candidate))
         if match is None:
             continue
         try:
             return int(match.group(1))
         except ValueError:
             continue
+
+    if title:
+        match = GUTENBERG_PREFIXED_ID_PATTERN.search(title)
+        if match is not None:
+            try:
+                return int(match.group(1))
+            except ValueError:
+                pass
     return None
 
 

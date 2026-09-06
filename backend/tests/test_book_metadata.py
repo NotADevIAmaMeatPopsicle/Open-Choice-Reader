@@ -82,6 +82,30 @@ def test_enrich_parsed_document_uses_exact_gutendex_match_for_gutenberg_filename
     assert resolution.metadata_source_id == "84"
 
 
+def test_gutenberg_detection_ignores_unrelated_numbers_in_parent_directories() -> None:
+    assert (
+        book_metadata.detect_gutenberg_id(
+            filename=Path("night-train.epub"),
+            origin_path=Path("data/users/1/source/night-train.epub"),
+            title="Notes from the Night Train",
+        )
+        is None
+    )
+
+
+def test_gutenberg_detection_accepts_explicit_and_numeric_filenames() -> None:
+    assert book_metadata.detect_gutenberg_id(
+        filename=Path("gutenberg-84-frankenstein.epub"),
+        origin_path=None,
+        title=None,
+    ) == 84
+    assert book_metadata.detect_gutenberg_id(
+        filename=Path("1342-0.txt"),
+        origin_path=None,
+        title=None,
+    ) == 1342
+
+
 def test_enrich_parsed_document_falls_back_to_open_library_then_gutendex(monkeypatch) -> None:
     monkeypatch.setattr(book_metadata.settings, "metadata_enrichment_enabled", True)
     monkeypatch.setattr(

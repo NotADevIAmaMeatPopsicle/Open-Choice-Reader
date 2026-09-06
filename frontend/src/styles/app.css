@@ -1049,8 +1049,9 @@ textarea:focus-visible {
 
 .library-cover-tile__cover {
   width: 100%;
-  aspect-ratio: 0.78;
-  object-fit: cover;
+  aspect-ratio: 2 / 3;
+  object-fit: contain;
+  background: var(--surface-neutral-soft);
   border-radius: 0.45rem;
   box-shadow: 0 16px 26px rgba(0, 0, 0, 0.35);
   transform-origin: center bottom;
@@ -1240,8 +1241,9 @@ textarea:focus-visible {
 
 .library-spotlight__cover {
   width: 100%;
-  aspect-ratio: 0.78;
-  object-fit: cover;
+  aspect-ratio: 2 / 3;
+  object-fit: contain;
+  background: var(--surface-neutral-soft);
   border-radius: 0.85rem;
   box-shadow: 0 18px 32px rgba(0, 0, 0, 0.28);
 }
@@ -1299,8 +1301,8 @@ textarea:focus-visible {
 
 .book-card__cover {
   width: 100%;
-  aspect-ratio: 3 / 4;
-  object-fit: cover;
+  aspect-ratio: 2 / 3;
+  object-fit: contain;
   border-radius: 1.1rem;
   background: rgba(255, 255, 255, 0.04);
   box-shadow: 0 18px 30px rgba(0, 0, 0, 0.22);
@@ -2023,8 +2025,8 @@ textarea:focus-visible {
 .discover-page__result-cover {
   width: 100%;
   max-width: 10rem;
-  aspect-ratio: 0.75;
-  object-fit: cover;
+  aspect-ratio: 2 / 3;
+  object-fit: contain;
   border-radius: 0.85rem;
   background: var(--surface-neutral-soft);
   box-shadow: 0 12px 20px rgba(0, 0, 0, 0.22);
@@ -2076,8 +2078,8 @@ textarea:focus-visible {
 
 .book-hero__cover {
   width: 100%;
-  aspect-ratio: 3 / 4;
-  object-fit: cover;
+  aspect-ratio: 2 / 3;
+  object-fit: contain;
   border-radius: 1.25rem;
   background: var(--surface-neutral-soft);
   box-shadow: 0 20px 35px rgba(0, 0, 0, 0.28);
@@ -2588,7 +2590,8 @@ textarea:focus-visible {
   width: 4.2rem;
   height: 4.2rem;
   border-radius: 0.9rem;
-  object-fit: cover;
+  object-fit: contain;
+  background: var(--surface-neutral-soft);
   box-shadow: 0 12px 20px rgba(0, 0, 0, 0.28);
 }
 
