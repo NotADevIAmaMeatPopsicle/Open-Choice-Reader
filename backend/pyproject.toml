@@ -34,7 +34,7 @@ all = [
 dev = [
   "build>=1.2,<2",
   "pip-audit>=2.9,<3",
-  "pytest>=8.3,<9",
+  "pytest>=8.3,<10",
   "ruff>=0.12,<1",
   "twine>=6,<7",
 ]
