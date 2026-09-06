@@ -31,3 +31,19 @@ def test_user_storage_roots_are_namespaced_per_user(tmp_path: Path, monkeypatch:
 
     for path in roots.values():
         assert path.is_dir()
+
+
+def test_user_storage_capacity_rejects_growth_past_limit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "storage_root", tmp_path / "data")
+    monkeypatch.setattr(settings, "user_storage_max_bytes", 10)
+
+    from app.services.user_storage import ensure_user_storage_capacity, user_source_root
+
+    source_root = user_source_root(42)
+    source_root.mkdir(parents=True)
+    (source_root / "existing.txt").write_bytes(b"12345678")
+
+    with pytest.raises(ValueError, match="Storage limit reached"):
+        ensure_user_storage_capacity(42, 3)

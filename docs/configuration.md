@@ -10,13 +10,15 @@ Remote metadata, cover images, documents, and audio are downloaded with separate
 
 EPUB parsing has separate limits for archive entry count, individual expanded members, total expanded bytes, and compression ratio. Increase the `OPEN_CHOICE_READER_EPUB_*` values only when trusted books require it and the host has enough memory for the expanded content.
 
+The application also limits the complete request body, extracted document text, PDF page count, transcription duration and concurrency, per-user persistent storage, and active export jobs. The corresponding `OPEN_CHOICE_READER_REQUEST_BODY_MAX_BYTES`, `DOCUMENT_MAX_EXTRACTED_CHARS`, `PDF_*`, `VOICE_TRANSCRIPTION_*`, `USER_STORAGE_MAX_BYTES`, and `USER_MAX_ACTIVE_EXPORT_JOBS` values are documented with safe defaults in `.env.example`. Raise them only after reviewing host memory and disk capacity.
+
 Path values in `backend/.env` are resolved from the directory where the backend process starts. The bundled scripts start it from `backend`, so the example's relative `data/...` paths stay inside that directory.
 
 ## Network access
 
 The bundled runtime binds to `127.0.0.1:8000` by default. Set `OPEN_CHOICE_READER_HOST` and `OPEN_CHOICE_READER_PORT` for the shell runtime. The PowerShell WSL launcher exposes the service to the LAN only when called with `-Expose`.
 
-For remote use, terminate HTTPS at a reverse proxy, enable secure session cookies, configure exact allowed origins, and rate-limit authentication routes. Configure `OPEN_CHOICE_READER_AUTH_BOOTSTRAP_TOKEN` before the first proxied request, then enter that value in the first-run form. Any request carrying proxy forwarding headers requires the token even when the proxy connects from loopback.
+For remote use, terminate HTTPS at a reverse proxy, enable secure session cookies, configure exact allowed origins, and rate-limit authentication routes. State-changing requests carrying an unexpected `Origin` are rejected. Configure `OPEN_CHOICE_READER_AUTH_BOOTSTRAP_TOKEN` before the first proxied request, then enter that value in the first-run form. Any request carrying proxy forwarding headers requires the token even when the proxy connects from loopback.
 
 ## Browser extension
 

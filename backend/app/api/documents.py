@@ -195,7 +195,11 @@ def get_document_cover_route(
         raise HTTPException(status_code=404, detail=str(error)) from error
 
     media_type = "image/svg+xml" if cover_path.suffix.lower() == ".svg" else None
-    return FileResponse(cover_path, media_type=media_type)
+    return FileResponse(
+        cover_path,
+        media_type=media_type,
+        headers={"Content-Security-Policy": "sandbox; default-src 'none'"},
+    )
 
 
 @router.get("", response_model=list[DocumentRead])

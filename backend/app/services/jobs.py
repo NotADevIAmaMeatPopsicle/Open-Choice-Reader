@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import re
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app import db
 from app.config import settings
@@ -103,6 +103,17 @@ def enqueue_export_job(
     normalized_clone_engine_id = (clone_engine_id or "").strip() or None
 
     with db.session_scope() as session:
+        if user_id is not None:
+            active_job_count = session.scalar(
+                select(func.count(job_model.Job.id)).where(
+                    job_model.Job.user_id == user_id,
+                    job_model.Job.status.in_(CANCELLABLE_JOB_STATUSES),
+                )
+            )
+            if (active_job_count or 0) >= settings.user_max_active_export_jobs:
+                raise ValueError(
+                    "Too many active export jobs; wait for an export to finish or cancel one"
+                )
         voice_preset = validate_export_request(
             voice_preset_id=normalized_voice_preset_id,
             format=normalized_format,

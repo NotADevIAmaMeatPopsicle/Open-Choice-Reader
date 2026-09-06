@@ -27,6 +27,7 @@ def get_voice_preview_audio_path(*, voice_option_id: str, user_id: int | None = 
         engine_name=engine.name,
         text=VOICE_PREVIEW_TEXT,
         voice_cache_key=normalized_voice_option_id,
+        user_id=user_id,
     )
     populate_cached_audio(engine=engine, text=VOICE_PREVIEW_TEXT, output_path=output_path)
     return output_path

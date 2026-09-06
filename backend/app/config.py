@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     auth_bootstrap_token: str | None = None
     auth_login_max_attempts: int = 10
     auth_login_window_seconds: int = 300
+    auth_login_max_keys: int = 10_000
     cors_allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     cors_allowed_origin_regex: str | None = None
     remote_fetch_allow_private_hosts: bool = False
@@ -21,11 +22,17 @@ class Settings(BaseSettings):
     remote_document_max_bytes: int = 50 * 1024 * 1024
     remote_audio_max_bytes: int = 25 * 1024 * 1024
     document_upload_max_bytes: int = 50 * 1024 * 1024
+    document_max_extracted_chars: int = 5_000_000
+    request_body_max_bytes: int = 60 * 1024 * 1024
     epub_max_entries: int = 5_000
     epub_max_member_bytes: int = 50 * 1024 * 1024
     epub_max_uncompressed_bytes: int = 200 * 1024 * 1024
     epub_max_compression_ratio: float = 200.0
+    pdf_max_pages: int = 2_000
+    pdf_max_extracted_chars: int = 20_000_000
     voice_upload_max_bytes: int = 25 * 1024 * 1024
+    voice_transcription_max_seconds: float = 600.0
+    voice_transcription_max_concurrency: int = 1
     theme_upload_max_bytes: int = 1024 * 1024
     storage_root: Path = Path("data")
     source_root: Path = Path("data/source")
@@ -48,6 +55,8 @@ class Settings(BaseSettings):
     worker_stale_job_minutes: int = 15
     audio_cache_max_gb: float = 8.0
     audio_cache_eviction_minutes: int = 30
+    user_storage_max_bytes: int = 10 * 1024 * 1024 * 1024
+    user_max_active_export_jobs: int = 10
     metadata_enrichment_enabled: bool = True
     metadata_request_timeout_seconds: float = 10.0
     project_gutenberg_top_url: str = "https://www.gutenberg.org/browse/scores/top"

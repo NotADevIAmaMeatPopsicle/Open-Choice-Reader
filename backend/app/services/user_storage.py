@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from app.config import settings
+from app.services.storage_permissions import ensure_private_directory
 
 
 def user_root(user_id: int) -> Path:
@@ -42,5 +43,33 @@ def ensure_user_storage_roots(user_id: int) -> dict[str, Path]:
         "voices": user_voices_root(user_id),
     }
     for path in roots.values():
-        path.mkdir(parents=True, exist_ok=True)
+        ensure_private_directory(path)
     return roots
+
+
+def user_storage_usage_bytes(user_id: int) -> int:
+    root = user_root(user_id)
+    if not root.exists():
+        return 0
+
+    total = 0
+    for path in root.rglob("*"):
+        try:
+            if path.is_file():
+                total += path.stat().st_size
+        except OSError:
+            continue
+    return total
+
+
+def ensure_user_storage_capacity(user_id: int, additional_bytes: int) -> None:
+    if additional_bytes < 0:
+        raise ValueError("additional_bytes must not be negative")
+    maximum = settings.user_storage_max_bytes
+    if maximum <= 0:
+        return
+    usage = user_storage_usage_bytes(user_id)
+    if usage + additional_bytes > maximum:
+        raise ValueError(
+            "Storage limit reached; remove library items, voice presets, or exports before retrying"
+        )

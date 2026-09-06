@@ -14,6 +14,7 @@ import app.models.user_invite as user_invite_model
 
 
 password_hasher = PasswordHash.recommended()
+dummy_password_hash = password_hasher.hash("open-choice-reader-dummy-password")
 
 
 class BootstrapAlreadyCompleteError(RuntimeError):
@@ -147,6 +148,7 @@ def authenticate_user(
         select(user_model.User).where(user_model.User.username == normalized_username)
     )
     if user is None or user.status != "active":
+        verify_password(password, dummy_password_hash)
         raise InvalidCredentialsError("Invalid username or password.")
     if not verify_password(password, user.password_hash):
         raise InvalidCredentialsError("Invalid username or password.")
@@ -248,12 +250,18 @@ def change_password(
     user: "user_model.User",
     current_password: str,
     new_password: str,
+    current_session_token: str | None = None,
 ) -> None:
     if not verify_password(current_password, user.password_hash):
         raise InvalidCredentialsError("Current password is incorrect.")
 
     _ensure_password_strength(new_password)
     user.password_hash = hash_password(new_password)
+    revoke_all_sessions_for_user(
+        session,
+        user_id=user.id,
+        except_raw_token=current_session_token,
+    )
     session.flush()
 
 
@@ -340,14 +348,22 @@ def revoke_invite(session: Session, *, invite_id: int) -> "user_invite_model.Use
     return invite
 
 
-def revoke_all_sessions_for_user(session: Session, *, user_id: int) -> int:
+def revoke_all_sessions_for_user(
+    session: Session,
+    *,
+    user_id: int,
+    except_raw_token: str | None = None,
+) -> int:
     revoked_count = 0
-    for session_record in session.scalars(
-        select(auth_session_model.AuthSession).where(
-            auth_session_model.AuthSession.user_id == user_id,
-            auth_session_model.AuthSession.revoked_at.is_(None),
+    statement = select(auth_session_model.AuthSession).where(
+        auth_session_model.AuthSession.user_id == user_id,
+        auth_session_model.AuthSession.revoked_at.is_(None),
+    )
+    if except_raw_token:
+        statement = statement.where(
+            auth_session_model.AuthSession.session_token_hash != _hash_token(except_raw_token)
         )
-    ):
+    for session_record in session.scalars(statement):
         session_record.revoked_at = _utcnow()
         revoked_count += 1
 

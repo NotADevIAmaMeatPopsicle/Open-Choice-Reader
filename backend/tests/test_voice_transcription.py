@@ -1,9 +1,20 @@
 from io import BytesIO
 from importlib import import_module, reload
 from types import SimpleNamespace
+import wave
 
 import pytest
 from starlette.datastructures import Headers, UploadFile
+
+
+def _wav_bytes() -> bytes:
+    output = BytesIO()
+    with wave.open(output, "wb") as wav_file:
+        wav_file.setnchannels(1)
+        wav_file.setsampwidth(2)
+        wav_file.setframerate(16_000)
+        wav_file.writeframes(b"\x00\x00" * 16_000)
+    return output.getvalue()
 
 
 def test_transcribe_reference_audio_uses_local_whisper_model(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -28,7 +39,7 @@ def test_transcribe_reference_audio_uses_local_whisper_model(monkeypatch: pytest
     monkeypatch.setattr(module, "import_module", lambda name: SimpleNamespace(WhisperModel=FakeWhisperModel))
 
     upload = UploadFile(
-        file=BytesIO(b"RIFFvoice"),
+        file=BytesIO(_wav_bytes()),
         filename="voice.wav",
         headers=Headers({"content-type": "audio/wav"}),
     )

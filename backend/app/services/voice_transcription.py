@@ -1,12 +1,18 @@
 from dataclasses import dataclass
+from functools import lru_cache
 from importlib import import_module
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from threading import BoundedSemaphore
 
 from fastapi import UploadFile
+import soundfile
 
 from app.config import settings
 from app.services.uploads import read_upload_bytes
+
+
+_transcription_slots = BoundedSemaphore(value=settings.voice_transcription_max_concurrency)
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,7 +40,22 @@ def transcribe_reference_audio(*, reference_audio: UploadFile) -> VoiceTranscrip
         if audio_path.stat().st_size == 0:
             raise ValueError("reference audio is empty")
 
-        return _transcribe_audio_path(audio_path)
+        try:
+            audio_info = soundfile.info(audio_path)
+        except (RuntimeError, TypeError) as error:
+            raise ValueError("reference audio could not be decoded") from error
+        if audio_info.duration > settings.voice_transcription_max_seconds:
+            raise ValueError(
+                "reference audio exceeds the "
+                f"{settings.voice_transcription_max_seconds:g}-second transcription limit"
+            )
+
+        if not _transcription_slots.acquire(blocking=False):
+            raise RuntimeError("Local transcription is busy. Try again after the current request finishes.")
+        try:
+            return _transcribe_audio_path(audio_path)
+        finally:
+            _transcription_slots.release()
 
 
 def _transcribe_audio_path(audio_path: Path) -> VoiceTranscriptionResult:
@@ -63,6 +84,15 @@ def _transcribe_audio_path(audio_path: Path) -> VoiceTranscriptionResult:
 
 
 def _load_model():
+    return _load_model_for_runtime(
+        settings.voice_transcription_model_name,
+        settings.voice_transcription_device,
+        settings.voice_transcription_compute_type,
+    )
+
+
+@lru_cache(maxsize=4)
+def _load_model_for_runtime(model_name: str, device: str, compute_type: str):
     try:
         module = import_module("faster_whisper")
     except ModuleNotFoundError as error:
@@ -73,7 +103,7 @@ def _load_model():
         raise RuntimeError("Local transcription runtime does not expose WhisperModel")
 
     return model_class(
-        settings.voice_transcription_model_name,
-        device=settings.voice_transcription_device,
-        compute_type=settings.voice_transcription_compute_type,
+        model_name,
+        device=device,
+        compute_type=compute_type,
     )

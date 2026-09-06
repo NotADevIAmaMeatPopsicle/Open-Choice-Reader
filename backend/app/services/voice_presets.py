@@ -8,7 +8,7 @@ from app import db
 from app.config import settings
 from app.models.voice_preset import VoicePreset
 from app.services.uploads import read_upload_bytes
-from app.services.user_storage import user_voices_root
+from app.services.user_storage import ensure_user_storage_capacity, user_voices_root
 
 
 QWEN3_CLONE_ENGINE = "qwen3_clone"
@@ -47,10 +47,13 @@ def create_voice_preset(
 
     filename = Path(reference_audio.filename or "reference.wav")
     destination = _build_reference_audio_path(filename, owner_user_id=owner_user_id)
+    audio_bytes = read_upload_bytes(reference_audio, max_bytes=settings.voice_upload_max_bytes)
+    if owner_user_id is not None:
+        ensure_user_storage_capacity(owner_user_id, len(audio_bytes))
 
     try:
         with destination.open("xb") as output:
-            output.write(read_upload_bytes(reference_audio, max_bytes=settings.voice_upload_max_bytes))
+            output.write(audio_bytes)
 
         voice_preset = VoicePreset(
             owner_user_id=owner_user_id,

@@ -142,6 +142,7 @@ def _get_chunk_audio_path(
         chunk_id=chunk.id,
         text=chunk.text,
         voice_cache_key=voice_cache_key,
+        user_id=user_id,
     )
     try:
         populate_cached_audio(engine=engine, text=chunk.text, output_path=audio_path)

@@ -173,14 +173,23 @@ def test_login_logout_and_change_password_round_trip(client: TestClient) -> None
     assert login_response.status_code == 200
     assert client.get("/api/auth/me").status_code == 200
 
-    change_response = client.post(
-        "/api/auth/change-password",
-        json={
-            "current_password": "correct horse battery staple",
-            "new_password": "new correct horse battery staple",
-        },
-    )
-    assert change_response.status_code == 200
+    with TestClient(client.app) as other_client:
+        other_login = other_client.post(
+            "/api/auth/login",
+            json={"username": "Admin", "password": "correct horse battery staple"},
+        )
+        assert other_login.status_code == 200
+
+        change_response = client.post(
+            "/api/auth/change-password",
+            json={
+                "current_password": "correct horse battery staple",
+                "new_password": "new correct horse battery staple",
+            },
+        )
+        assert change_response.status_code == 200
+        assert client.get("/api/auth/me").status_code == 200
+        assert other_client.get("/api/auth/me").status_code == 401
 
     logout_again = client.post("/api/auth/logout")
     assert logout_again.status_code == 204

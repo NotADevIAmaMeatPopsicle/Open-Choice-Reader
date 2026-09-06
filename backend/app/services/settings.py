@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import platform
 import shutil
 import subprocess
 
@@ -590,8 +589,9 @@ def _require_voice_option(
 
 
 def _build_host_runtime_snapshot() -> HostRuntimeSnapshot:
-    host_name = (platform.node() or "Unknown host").strip() or "Unknown host"
-    gpu_name = _detect_gpu_name()
+    host_name = "Local host"
+    detected_gpu_name = _detect_gpu_name()
+    gpu_name = "Detected" if detected_gpu_name else None
 
     if gpu_name:
         runtime_label = "GPU-capable host"

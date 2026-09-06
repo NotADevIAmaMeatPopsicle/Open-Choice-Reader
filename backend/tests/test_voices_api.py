@@ -183,7 +183,6 @@ def test_list_voice_options_includes_builtin_reader_and_saved_clone(
     monkeypatch.setattr(settings, "qwen_clone_model_name", "Qwen/Qwen3-TTS-12Hz-0.6B-Base")
     monkeypatch.setattr("app.tts.piper_engine.shutil.which", lambda binary: str(piper_binary))
     monkeypatch.setattr("app.tts.qwen_clone_engine.import_module", lambda name: (_ for _ in ()).throw(ModuleNotFoundError(name)))
-    monkeypatch.setattr("app.services.settings.platform.node", lambda: "reader-host")
     monkeypatch.setattr("app.services.settings._detect_gpu_name", lambda: "NVIDIA GeForce RTX 3080")
 
     create_response = client.post(
@@ -256,7 +255,6 @@ def test_settings_api_persists_default_voice_choices_and_engine_health(
     monkeypatch.setattr(settings, "qwen_clone_model_name", "Qwen/Qwen3-TTS-12Hz-0.6B-Base")
     monkeypatch.setattr("app.tts.piper_engine.shutil.which", lambda binary: str(piper_binary))
     monkeypatch.setattr("app.tts.qwen_clone_engine.import_module", lambda name: (_ for _ in ()).throw(ModuleNotFoundError(name)))
-    monkeypatch.setattr("app.services.settings.platform.node", lambda: "reader-host")
     monkeypatch.setattr("app.services.settings._detect_gpu_name", lambda: "NVIDIA GeForce RTX 3080")
 
     create_response = client.post(
@@ -321,9 +319,9 @@ def test_settings_api_persists_default_voice_choices_and_engine_health(
         },
     ]
     assert payload["host_runtime"] == {
-        "host_name": "reader-host",
+        "host_name": "Local host",
         "runtime_label": "GPU-capable host",
-        "gpu_name": "NVIDIA GeForce RTX 3080",
+        "gpu_name": "Detected",
         "execution_summary": "This host is serving Open Choice Reader and performing audio generation here.",
     }
     assert payload["clone_runtime"] == {
@@ -333,7 +331,7 @@ def test_settings_api_persists_default_voice_choices_and_engine_health(
         "availability": "unavailable",
         "availability_detail": "Qwen3 clone runtime is not installed on this host.",
         "usage_summary": "Saved cloned presets can be used for live reading and audiobook export when the clone runtime is available.",
-        "execution_summary": "Live cloned reading and audiobook exports run on reader-host when the clone runtime is available.",
+        "execution_summary": "Live cloned reading and audiobook exports run on Local host when the clone runtime is available.",
         "available_models": [
             {
                 "engine": "qwen3_clone_0_6b",
@@ -374,5 +372,5 @@ def test_settings_api_persists_default_voice_choices_and_engine_health(
     assert persisted_response.json()["default_export_voice_id"] == f"preset:{create_response.json()['id']}"
     assert persisted_response.json()["fallback_voice_id"] is None
     assert persisted_response.json()["selected_clone_model_engine"] == "qwen3_clone_1_7b"
-    assert persisted_response.json()["host_runtime"]["host_name"] == "reader-host"
+    assert persisted_response.json()["host_runtime"]["host_name"] == "Local host"
     assert persisted_response.json()["clone_runtime"]["preset_count"] == 1

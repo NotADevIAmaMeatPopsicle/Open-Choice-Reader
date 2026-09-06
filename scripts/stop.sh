@@ -5,16 +5,6 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 pid_dir="$repo_root/.runtime/pids"
 worker_ready_file="$repo_root/.runtime/worker.ready"
 frontend_pid_file="$pid_dir/frontend.pid"
-backend_unit="open-choice-reader-backend.service"
-worker_unit="open-choice-reader-worker.service"
-
-systemd_runner_available() {
-  [[ "${EUID:-$(id -u)}" -eq 0 ]] &&
-    [[ -d /run/systemd/system ]] &&
-    command -v systemctl >/dev/null 2>&1 &&
-    systemctl show-environment >/dev/null 2>&1
-}
-
 find_matching_pids() {
   if ! command -v ps >/dev/null 2>&1; then
     return 0
@@ -85,19 +75,6 @@ stop_from_pid_file() {
 }
 
 stop_from_pid_file "frontend" "$frontend_pid_file"
-
-if systemd_runner_available; then
-  if systemctl is-active --quiet "$backend_unit"; then
-    systemctl stop "$backend_unit"
-    echo "Stopped backend systemd unit ($backend_unit)."
-  fi
-  if systemctl is-active --quiet "$worker_unit"; then
-    systemctl stop "$worker_unit"
-    echo "Stopped worker systemd unit ($worker_unit)."
-  fi
-  systemctl reset-failed "$backend_unit" >/dev/null 2>&1 || true
-  systemctl reset-failed "$worker_unit" >/dev/null 2>&1 || true
-fi
 
 stop_from_pid_file "backend" "$pid_dir/backend.pid"
 stop_from_pid_file "worker" "$pid_dir/worker.pid"

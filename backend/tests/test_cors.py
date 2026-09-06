@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from app.config import settings
 from app.main import app
 
 
@@ -46,3 +47,28 @@ def test_chrome_extension_origin_requires_explicit_configuration() -> None:
 
     assert response.status_code == 400
     assert "access-control-allow-origin" not in response.headers
+
+
+def test_unknown_origin_cannot_send_state_changing_request() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/auth/login",
+        headers={"Origin": "https://example.test"},
+        json={"username": "admin", "password": "not-the-password"},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Request origin is not allowed"}
+
+
+def test_declared_oversized_request_is_rejected_before_parsing() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/auth/login",
+        headers={"Content-Length": str(settings.request_body_max_bytes + 1)},
+        content=b"{}",
+    )
+
+    assert response.status_code == 413

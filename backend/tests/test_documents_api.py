@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from starlette.datastructures import Headers, UploadFile
 
 from app.config import settings
-from app.services.user_storage import user_inbox_root, user_source_root
+from app.services.user_storage import user_cache_root, user_inbox_root, user_source_root
 
 SHORT_SAMPLE_TEXT = "First sentence. Second sentence."
 LONG_SAMPLE_TEXT = " ".join(
@@ -103,7 +103,10 @@ def test_import_epub_uses_embedded_metadata_and_cover(client: TestClient, epub_f
 
     assert cover_response.status_code == 200
     assert cover_response.headers["content-type"].startswith("image/svg+xml")
-    assert b"Fixture Cover" in cover_response.content
+    assert cover_response.headers["content-security-policy"] == "sandbox; default-src 'none'"
+    assert b"Fixture Cover" not in cover_response.content
+    assert b"Alice Fixture" in cover_response.content
+    assert b"<tspan" in cover_response.content
 
 
 def test_import_html_extracts_title_author_and_content(client: TestClient) -> None:
@@ -460,7 +463,7 @@ def test_delete_document_removes_rows_and_files(client: TestClient) -> None:
     stored_file = next(user_source_root(1).glob("sample*.txt"))
     audio_cache_dirs = [
         path
-        for path in (settings.cache_root / "audio").glob(f"*/*/{document_id}")
+        for path in (user_cache_root(1) / "audio").glob(f"*/*/{document_id}")
         if path.is_dir()
     ]
     assert audio_cache_dirs

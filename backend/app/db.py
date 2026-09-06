@@ -8,6 +8,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import settings
+from app.services.storage_permissions import ensure_private_directory, ensure_private_file
 
 
 def _sqlite_connect_args(database_url: str) -> dict[str, bool]:
@@ -32,8 +33,8 @@ SessionLocal = sessionmaker(
 
 def init_database() -> None:
     database_path = make_url(settings.database_url).database
-    if database_path:
-        Path(database_path).parent.mkdir(parents=True, exist_ok=True)
+    if database_path and database_path != ":memory:":
+        ensure_private_directory(Path(database_path).parent)
 
     from app.models import Base
 
@@ -66,6 +67,8 @@ def init_database() -> None:
         reload(import_module("app.models.theme_profile"))
 
     Base.metadata.create_all(bind=engine)
+    if database_path and database_path != ":memory:":
+        ensure_private_file(database_path)
     _ensure_runtime_columns()
 
 

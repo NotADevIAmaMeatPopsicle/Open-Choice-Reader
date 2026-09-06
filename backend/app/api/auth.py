@@ -36,6 +36,7 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 login_limiter = LoginAttemptLimiter(
     max_attempts=settings.auth_login_max_attempts,
     window_seconds=settings.auth_login_window_seconds,
+    max_keys=settings.auth_login_max_keys,
 )
 
 
@@ -380,6 +381,7 @@ def change_password_route(
                 user=user,
                 current_password=payload.current_password,
                 new_password=payload.new_password,
+                current_session_token=session_token,
             )
         except auth_service.AuthenticationRequiredError as error:
             raise HTTPException(status_code=401, detail=str(error)) from error

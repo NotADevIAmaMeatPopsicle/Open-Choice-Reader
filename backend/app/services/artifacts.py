@@ -2,7 +2,10 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from app.config import settings
 from app.models.job import Job
+from app.services.storage_permissions import ensure_private_directory
+from app.services.user_storage import user_export_root
 
 
 @dataclass(slots=True)
@@ -37,7 +40,29 @@ def resolve_job_artifact_path(*, job: Job, artifact_index: int) -> Path:
     artifacts = list_job_artifacts(job)
     if artifact_index < 0 or artifact_index >= len(artifacts):
         raise LookupError(f"Artifact {artifact_index} was not found for job {job.id}")
-    return Path(artifacts[artifact_index].path)
+    artifact_path = Path(artifacts[artifact_index].path).resolve()
+    if not artifact_path_is_within_job_root(job=job, artifact_path=artifact_path):
+        raise LookupError(f"Artifact {artifact_index} was not found for job {job.id}")
+    return artifact_path
+
+
+def job_artifact_root(job: Job, *, create: bool = False) -> Path:
+    root = (
+        user_export_root(job.user_id) / f"job-{job.id}"
+        if job.user_id is not None
+        else Path(settings.export_root)
+    )
+    if create:
+        ensure_private_directory(root)
+    return root
+
+
+def artifact_path_is_within_job_root(*, job: Job, artifact_path: Path) -> bool:
+    try:
+        artifact_path.resolve().relative_to(job_artifact_root(job).resolve())
+    except ValueError:
+        return False
+    return True
 
 
 def serialize_job_artifacts(job: Job) -> list[dict[str, str | None]]:

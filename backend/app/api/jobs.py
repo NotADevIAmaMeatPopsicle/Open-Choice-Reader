@@ -5,7 +5,11 @@ from fastapi.responses import FileResponse
 
 from app.api.dependencies import CurrentUser, get_current_user
 from app.schemas.job import JobExportCreate, JobRead
-from app.services.artifacts import resolve_job_artifact_path, serialize_job_artifacts
+from app.services.artifacts import (
+    artifact_path_is_within_job_root,
+    resolve_job_artifact_path,
+    serialize_job_artifacts,
+)
 from app.services.jobs import (
     can_cancel_job,
     can_retry_job,
@@ -42,6 +46,8 @@ def download_job_route(job_id: int, current_user: CurrentUser = Depends(get_curr
         raise HTTPException(status_code=409, detail=f"Job {job_id} is not ready for download")
 
     artifact_path = Path(job.artifact_path)
+    if not artifact_path_is_within_job_root(job=job, artifact_path=artifact_path):
+        raise HTTPException(status_code=404, detail=f"Export artifact for job {job_id} is missing")
     if not artifact_path.exists():
         raise HTTPException(status_code=404, detail=f"Export artifact for job {job_id} is missing")
 

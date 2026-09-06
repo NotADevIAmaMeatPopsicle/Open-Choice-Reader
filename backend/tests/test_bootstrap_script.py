@@ -23,11 +23,14 @@ def test_bootstrap_script_keeps_default_piper_symlink_and_installs_frontend() ->
     assert "npm ci" in script_text
 
 
-def test_host_scripts_require_a_privileged_live_systemd_manager() -> None:
+def test_host_scripts_do_not_launch_privileged_systemd_units() -> None:
     scripts_root = Path(__file__).resolve().parents[2] / "scripts"
 
-    for script_name in ("start.sh", "stop.sh"):
-        script_text = (scripts_root / script_name).read_text(encoding="utf-8")
-        assert '[[ "${EUID:-$(id -u)}" -eq 0 ]]' in script_text
-        assert "[[ -d /run/systemd/system ]]" in script_text
-        assert "systemctl show-environment" in script_text
+    start_script = (scripts_root / "start.sh").read_text(encoding="utf-8")
+    stop_script = (scripts_root / "stop.sh").read_text(encoding="utf-8")
+
+    assert '[[ "${EUID:-$(id -u)}" -eq 0 ]]' in start_script
+    assert "Refusing to run Open Choice Reader as root" in start_script
+    assert "systemd-run" not in start_script
+    assert "systemctl" not in start_script
+    assert "systemctl" not in stop_script

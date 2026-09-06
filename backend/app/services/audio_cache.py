@@ -5,6 +5,8 @@ from pathlib import Path
 from uuid import uuid4
 
 from app.config import settings
+from app.services.storage_permissions import ensure_private_directory
+from app.services.user_storage import user_cache_root
 from app.tts.base import TTSEngine
 
 
@@ -15,10 +17,12 @@ def build_chunk_audio_cache_path(
     chunk_id: int,
     text: str,
     voice_cache_key: str | None = None,
+    user_id: int | None = None,
 ) -> Path:
     digest = hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
-    cache_dir = Path(settings.cache_root) / "audio" / engine_name / _build_cache_scope(voice_cache_key) / str(document_id)
-    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_root = user_cache_root(user_id) if user_id is not None else Path(settings.cache_root)
+    cache_dir = cache_root / "audio" / engine_name / _build_cache_scope(voice_cache_key) / str(document_id)
+    ensure_private_directory(cache_dir)
     return cache_dir / f"chunk-{chunk_id}-{digest}.wav"
 
 
@@ -27,10 +31,12 @@ def build_voice_preview_audio_cache_path(
     engine_name: str,
     text: str,
     voice_cache_key: str | None = None,
+    user_id: int | None = None,
 ) -> Path:
     digest = hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
-    cache_dir = Path(settings.cache_root) / "audio" / engine_name / "preview" / _build_cache_scope(voice_cache_key)
-    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_root = user_cache_root(user_id) if user_id is not None else Path(settings.cache_root)
+    cache_dir = cache_root / "audio" / engine_name / "preview" / _build_cache_scope(voice_cache_key)
+    ensure_private_directory(cache_dir)
     return cache_dir / f"preview-{digest}.wav"
 
 

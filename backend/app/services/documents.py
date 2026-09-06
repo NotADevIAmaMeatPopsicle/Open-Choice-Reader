@@ -17,6 +17,7 @@ import app.models.job as job_model
 import app.models.playback_session as playback_session_model
 import app.models.section as section_model
 import app.models.text_chunk as text_chunk_model
+from app.services.artifacts import artifact_path_is_within_job_root
 from app.parsers.base import ParsedDocument
 from app.parsers.epub import parse_epub_document
 from app.parsers.html import parse_html_document
@@ -28,7 +29,7 @@ from app.services.chunking import chunk_paragraphs
 from app.services.library_view import upsert_document_profile
 from app.services.library_scan import resolve_inbox_candidate_path
 from app.services.uploads import read_upload_bytes
-from app.services.user_storage import user_source_root
+from app.services.user_storage import ensure_user_storage_capacity, user_source_root
 
 
 PLAIN_TEXT_FORMATS = {"txt", "md", "markdown"}
@@ -252,7 +253,9 @@ def delete_document(document_id: int, *, owner_user_id: int | None = None) -> No
 
 def _collect_job_artifact_paths(job: "job_model.Job") -> list[Path]:
     artifact_paths: list[Path] = []
-    if job.artifact_path:
+    if job.artifact_path and artifact_path_is_within_job_root(
+        job=job, artifact_path=Path(job.artifact_path)
+    ):
         artifact_paths.append(Path(job.artifact_path))
 
     if not job.artifact_manifest:
@@ -269,7 +272,9 @@ def _collect_job_artifact_paths(job: "job_model.Job") -> list[Path]:
         if not isinstance(entry, dict):
             continue
         entry_path = str(entry.get("path") or "").strip()
-        if entry_path:
+        if entry_path and artifact_path_is_within_job_root(
+            job=job, artifact_path=Path(entry_path)
+        ):
             artifact_paths.append(Path(entry_path))
 
     return artifact_paths
@@ -355,13 +360,23 @@ def _store_document_content(
 def _parse_document_content(*, file_bytes: bytes, file_format: str) -> ParsedDocument:
     if file_format in PLAIN_TEXT_FORMATS:
         content = file_bytes.decode("utf-8-sig", errors="replace")
-        return parse_plain_text_document(content, file_format)
+        parsed_document = parse_plain_text_document(content, file_format)
+        _validate_extracted_text_size(parsed_document)
+        return parsed_document
 
     parser = RICH_TEXT_PARSERS.get(file_format)
     if parser is None:
         return ParsedDocument(sections=[])
 
-    return parser(file_bytes)
+    parsed_document = parser(file_bytes)
+    _validate_extracted_text_size(parsed_document)
+    return parsed_document
+
+
+def _validate_extracted_text_size(parsed_document: ParsedDocument) -> None:
+    total_characters = sum(len(section.text) for section in parsed_document.sections)
+    if total_characters > settings.document_max_extracted_chars:
+        raise ValueError("Document extracted text exceeds the configured limit")
 
 
 def _build_document_summary(parsed_document: ParsedDocument) -> str | None:
@@ -389,6 +404,8 @@ def _import_document_from_bytes(
     owner_user_id: int | None = None,
 ) -> "document_model.Document":
     file_format = _validate_import_format(filename)
+    if owner_user_id is not None:
+        ensure_user_storage_capacity(owner_user_id, len(file_bytes))
     destination = _build_storage_path(filename, owner_user_id=owner_user_id)
 
     while True:
@@ -397,7 +414,7 @@ def _import_document_from_bytes(
                 output.write(file_bytes)
             break
         except FileExistsError:
-            destination = _build_storage_path(filename)
+            destination = _build_storage_path(filename, owner_user_id=owner_user_id)
 
     try:
         parsed_document = _parse_document_content(file_bytes=file_bytes, file_format=file_format)

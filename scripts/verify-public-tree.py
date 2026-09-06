@@ -98,7 +98,13 @@ def candidate_files() -> list[str]:
         check=True,
         capture_output=True,
     )
-    return sorted(path for path in result.stdout.decode("utf-8").split("\0") if path)
+    paths = (path for path in result.stdout.decode("utf-8").split("\0") if path)
+    return sorted(
+        path
+        for path in paths
+        if (ROOT / Path(*PurePosixPath(path).parts)).exists()
+        or (ROOT / Path(*PurePosixPath(path).parts)).is_symlink()
+    )
 
 
 def allowlist_entries() -> tuple[set[str], tuple[str, ...]]:

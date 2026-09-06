@@ -1,4 +1,4 @@
-from collections import defaultdict, deque
+from collections import deque
 from dataclasses import dataclass, field
 from threading import Lock
 import time
@@ -8,11 +8,12 @@ import time
 class LoginAttemptLimiter:
     max_attempts: int
     window_seconds: int
-    _attempts: dict[str, deque[float]] = field(default_factory=lambda: defaultdict(deque))
+    max_keys: int = 10_000
+    _attempts: dict[str, deque[float]] = field(default_factory=dict)
     _lock: Lock = field(default_factory=Lock)
 
     def _prune(self, key: str, now: float) -> deque[float]:
-        attempts = self._attempts[key]
+        attempts = self._attempts.get(key, deque())
         cutoff = now - self.window_seconds
         while attempts and attempts[0] <= cutoff:
             attempts.popleft()
@@ -34,8 +35,15 @@ class LoginAttemptLimiter:
         with self._lock:
             attempts = self._prune(key, current_time)
             if key not in self._attempts:
+                self._prune_expired_keys(current_time)
+                while len(self._attempts) >= self.max_keys:
+                    self._attempts.pop(next(iter(self._attempts)))
                 self._attempts[key] = attempts
             attempts.append(current_time)
+
+    def _prune_expired_keys(self, now: float) -> None:
+        for existing_key in list(self._attempts):
+            self._prune(existing_key, now)
 
     def clear(self, key: str) -> None:
         with self._lock:

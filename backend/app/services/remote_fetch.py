@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import ipaddress
 import socket
+import time
 from urllib.parse import urljoin, urlparse, urlunparse
 
 import httpx
@@ -84,8 +85,12 @@ def _fetch_remote_resource(
     max_redirects: int = 5,
 ) -> RemoteResource:
     current_url = url
+    deadline = time.monotonic() + timeout_seconds
 
     for redirect_count in range(max_redirects + 1):
+        remaining_seconds = deadline - time.monotonic()
+        if remaining_seconds <= 0:
+            raise ValueError("The remote download exceeded its total time limit")
         target = _resolve_remote_target(current_url)
         request_headers = {"Host": target.host_header} if target.host_header else None
         request_extensions = (
@@ -96,7 +101,7 @@ def _fetch_remote_resource(
         # for a different logical hostname that happens to resolve to the same address.
         with httpx.Client(
             follow_redirects=False,
-            timeout=timeout_seconds,
+            timeout=remaining_seconds,
             headers={"User-Agent": user_agent},
         ) as client, client.stream(
             "GET",
@@ -125,6 +130,8 @@ def _fetch_remote_resource(
 
             body = bytearray()
             for chunk in response.iter_bytes():
+                if time.monotonic() > deadline:
+                    raise ValueError("The remote download exceeded its total time limit")
                 body.extend(chunk)
                 if len(body) > max_bytes:
                     raise ValueError(f"The remote file exceeds the {max_bytes}-byte download limit")

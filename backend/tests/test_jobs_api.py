@@ -8,6 +8,7 @@ from app import db
 from app.config import settings
 from app.models.job import Job
 from app.models.voice_preset import VoicePreset
+from app.services.user_storage import user_export_root
 
 
 def _load_app():
@@ -291,7 +292,11 @@ def test_jobs_listing_returns_result_metadata_for_completed_and_failed_jobs(clie
     assert completed_job.status_code == 201
     assert failed_job.status_code == 201
 
-    artifact_path = Path(settings.export_root) / f"job-{completed_job.json()['id']}.wav"
+    artifact_path = (
+        user_export_root(1)
+        / f"job-{completed_job.json()['id']}"
+        / f"job-{completed_job.json()['id']}.wav"
+    )
     artifact_path.parent.mkdir(parents=True, exist_ok=True)
     artifact_path.write_bytes(b"RIFFfixture")
 
@@ -348,7 +353,11 @@ def test_job_detail_and_download_surface_completed_exports(client: TestClient) -
     )
     assert create_response.status_code == 201
 
-    artifact_path = Path(settings.export_root) / f"job-{create_response.json()['id']}.wav"
+    artifact_path = (
+        user_export_root(1)
+        / f"job-{create_response.json()['id']}"
+        / f"job-{create_response.json()['id']}.wav"
+    )
     artifact_path.parent.mkdir(parents=True, exist_ok=True)
     artifact_path.write_bytes(b"RIFFfixture")
 
@@ -492,7 +501,7 @@ def test_jobs_listing_surfaces_split_artifact_library_metadata(client: TestClien
     )
     assert create_response.status_code == 201
 
-    export_root = Path(settings.export_root)
+    export_root = user_export_root(1) / f"job-{create_response.json()['id']}"
     export_root.mkdir(parents=True, exist_ok=True)
     artifact_one = export_root / "alice-split-01-chapter-one.wav"
     artifact_two = export_root / "alice-split-02-chapter-two.wav"

@@ -3,11 +3,14 @@
 .gitattributes
 .github/
 .gitignore
+ARCHITECTURE.md
 CODE_OF_CONDUCT.md
 CONTRIBUTING.md
 LICENSE
 README.md
 SECURITY.md
+STATUS.md
+THIRD_PARTY_NOTICES.md
 public-files.allowlist
 backend/.env.example
 backend/LICENSE

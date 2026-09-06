@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
-from pathlib import Path
+import re
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from app.api.auth import router as auth_router
 from app.api.clone_samples import router as clone_samples_router
@@ -21,7 +22,9 @@ from app.api.shares import router as shares_router
 from app.api.themes import router as themes_router
 from app.api.voices import router as voices_router
 from app.config import settings
+from app.request_limits import RequestBodyLimitMiddleware
 from app.services.documents import init_database
+from app.services.storage_permissions import ensure_private_directory
 
 
 def create_storage_roots() -> None:
@@ -35,7 +38,7 @@ def create_storage_roots() -> None:
         settings.storage_root / "covers",
         settings.storage_root / "voices",
     ):
-        Path(path).mkdir(parents=True, exist_ok=True)
+        ensure_private_directory(path)
 
 
 @asynccontextmanager
@@ -46,6 +49,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Open Choice Reader", lifespan=lifespan)
+app.add_middleware(RequestBodyLimitMiddleware, max_bytes=settings.request_body_max_bytes)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -73,12 +77,29 @@ app.include_router(voices_router)
 
 @app.middleware("http")
 async def add_security_headers(request, call_next):
+    if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+        origin = request.headers.get("origin")
+        if origin and not _is_allowed_request_origin(request, origin):
+            return JSONResponse({"detail": "Request origin is not allowed"}, status_code=403)
     response = await call_next(request)
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     response.headers.setdefault("Permissions-Policy", "camera=(), geolocation=(), microphone=()")
     return response
+
+
+def _is_allowed_request_origin(request, origin: str) -> bool:
+    parsed_origin = urlsplit(origin)
+    origin_value = f"{parsed_origin.scheme}://{parsed_origin.netloc}"
+    request_origin = f"{request.url.scheme}://{request.url.netloc}"
+    if origin_value == request_origin:
+        return True
+    if origin in settings.allowed_cors_origins():
+        return True
+    if settings.cors_allowed_origin_regex:
+        return re.fullmatch(settings.cors_allowed_origin_regex, origin) is not None
+    return False
 
 
 @app.get("/{full_path:path}", include_in_schema=False)

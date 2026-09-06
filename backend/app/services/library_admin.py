@@ -39,6 +39,14 @@ def reset_library() -> None:
     ):
         _reset_directory(Path(path))
 
+    users_root = Path(settings.storage_root) / "users"
+    if users_root.is_dir():
+        for user_root in users_root.iterdir():
+            if not user_root.is_dir():
+                continue
+            for child_name in ("source", "covers", "cache", "exports"):
+                _reset_directory(user_root / child_name)
+
 
 def _reset_directory(path: Path) -> None:
     if path.exists():

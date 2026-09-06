@@ -15,8 +15,9 @@ from app.models.job import Job
 from app.models.section import Section
 from app.models.text_chunk import TextChunk
 from app.services.audio_cache import build_chunk_audio_cache_path, populate_cached_audio
-from app.services.artifacts import build_manifest_entry, serialize_manifest_entries
+from app.services.artifacts import build_manifest_entry, job_artifact_root, serialize_manifest_entries
 from app.services.jobs import utcnow, validate_export_request
+from app.services.user_storage import ensure_user_storage_capacity, user_cache_root
 from app.tts.qwen_clone_engine import Qwen3CloneEngine
 from app.tts.registry import build_clone_engine_for_profile, get_tts_engine
 
@@ -110,7 +111,11 @@ def _export_document_audio(job: Job) -> dict[str, Path | str | None]:
             )
 
         export_path = _build_export_path(job)
-        _write_combined_wav(chunk_audio_paths=chunk_audio_paths, output_path=export_path)
+        _write_combined_wav(
+            chunk_audio_paths=chunk_audio_paths,
+            output_path=export_path,
+            user_id=job.user_id,
+        )
         return {"artifact_path": export_path, "artifact_manifest": None}
     finally:
         if temporary_chunk_dir is not None:
@@ -157,7 +162,8 @@ def _synthesize_clone_chunk_audio(
 ) -> tuple[list[Path], Path]:
     engine = _build_clone_engine(job=job, voice_preset=voice_preset)
     reference_audio_path = Path(voice_preset.reference_path)
-    chunk_audio_root = Path(settings.cache_root) / "audio" / engine.name / "jobs" / f"job-{job.id}"
+    cache_root = user_cache_root(job.user_id) if job.user_id is not None else Path(settings.cache_root)
+    chunk_audio_root = cache_root / "audio" / engine.name / "jobs" / f"job-{job.id}"
     chunk_audio_root.mkdir(parents=True, exist_ok=True)
 
     chunk_audio_paths: list[Path] = []
@@ -187,7 +193,7 @@ def _synthesize_clone_chunk_audio(
 
 def _export_split_sections(*, job: Job, sections: list[ExportSection], voice_preset) -> tuple[str, Path | None]:
     temporary_chunk_dir: Path | None = None
-    export_root = Path(settings.export_root)
+    export_root = _build_job_export_root(job)
     export_root.mkdir(parents=True, exist_ok=True)
     total_chunks = _count_total_chunks(sections)
     processed_chunks = 0
@@ -198,7 +204,15 @@ def _export_split_sections(*, job: Job, sections: list[ExportSection], voice_pre
 
     if clone_engine is not None:
         chunk_audio_root = (
-            Path(settings.cache_root) / "audio" / clone_engine.name / "jobs" / f"job-{job.id}-split"
+            (
+                user_cache_root(job.user_id)
+                if job.user_id is not None
+                else Path(settings.cache_root)
+            )
+            / "audio"
+            / clone_engine.name
+            / "jobs"
+            / f"job-{job.id}-split"
         )
         chunk_audio_root.mkdir(parents=True, exist_ok=True)
         temporary_chunk_dir = chunk_audio_root
@@ -220,6 +234,7 @@ def _export_split_sections(*, job: Job, sections: list[ExportSection], voice_pre
                     document_id=job.document_id,
                     chunk_id=chunk.id,
                     text=chunk.text,
+                    user_id=job.user_id,
                 )
                 populate_cached_audio(engine=default_engine, text=chunk.text, output_path=audio_path)
             else:
@@ -242,7 +257,11 @@ def _export_split_sections(*, job: Job, sections: list[ExportSection], voice_pre
                 status_detail=f"Rendering chunk {processed_chunks} of {total_chunks}",
             )
 
-        _write_combined_wav(chunk_audio_paths=section_chunk_paths, output_path=output_path)
+        _write_combined_wav(
+            chunk_audio_paths=section_chunk_paths,
+            output_path=output_path,
+            user_id=job.user_id,
+        )
         manifest_entries.append(
             build_manifest_entry(
                 filename=output_path.name,
@@ -262,15 +281,23 @@ def _build_clone_engine(*, job: Job, voice_preset):
 
 
 def _build_export_path(job: Job) -> Path:
-    export_root = Path(settings.export_root)
-    export_root.mkdir(parents=True, exist_ok=True)
+    export_root = _build_job_export_root(job)
     return export_root / f"job-{job.id}.{job.format}"
 
 
-def _write_combined_wav(*, chunk_audio_paths: list[Path], output_path: Path) -> None:
+def _build_job_export_root(job: Job) -> Path:
+    return job_artifact_root(job, create=True)
+
+
+def _write_combined_wav(
+    *, chunk_audio_paths: list[Path], output_path: Path, user_id: int | None = None
+) -> None:
     temp_path = output_path.with_name(f"{output_path.name}.{uuid4().hex}.tmp")
 
     try:
+        if user_id is not None:
+            estimated_output_bytes = 44 + sum(path.stat().st_size for path in chunk_audio_paths)
+            ensure_user_storage_capacity(user_id, estimated_output_bytes)
         with wave.open(str(chunk_audio_paths[0]), "rb") as first_chunk:
             params = (
                 first_chunk.getnchannels(),

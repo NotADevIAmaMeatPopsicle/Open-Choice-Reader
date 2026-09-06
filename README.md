@@ -1,42 +1,61 @@
 # Open Choice Reader
 
-Open Choice Reader is a self-hosted document library and read-aloud application. It imports text, Markdown, HTML, EPUB, and PDF files; supports public-domain catalog and article imports; and can generate speech with local Piper, Kokoro, or Qwen-based voice-cloning runtimes. It is intended for people who want control over their library, audio, and choice of speech engine rather than sending their documents to a hosted reading service.
+Open Choice Reader is a self-hosted reading library that turns documents, articles, and public-domain books into a private, local-first read-aloud experience.
 
-Open Choice Reader is in its early public-release stage. It currently has no packaged release or published Python or npm package; installation is from source while the project matures.
+![Open Choice Reader library with synthetic demo books](docs/assets/screenshots/library.png)
 
-## Components
+## What it does
 
-- `backend/`: FastAPI API, SQLite data model, document parsing, playback, and export worker
-- `frontend/`: React and Vite web interface
-- `browser-extension/`: optional Chromium extension for sending pages or selected text to a configured server
-- `scripts/`: local development and Windows/WSL host helpers
+- Imports text, Markdown, HTML, EPUB, and text-based PDF files.
+- Saves articles, pasted text, and supported public-domain catalog entries.
+- Reads in the browser with synchronized progress and local speech generation.
+- Exports WAV audiobooks, including chapter-split exports.
+- Uses Piper by default, with optional Kokoro and Qwen voice-cloning runtimes.
+- Keeps each signed-in user's documents, covers, voices, cache, and exports separate.
+- Includes an optional Chromium extension for sending a page or selection to the reader.
 
-## Requirements
+Open Choice Reader is currently source-only, pre-release software. See [STATUS.md](STATUS.md) for the supported surface and known limitations.
 
-- Python 3.12 through 3.14
-- Node.js 22.12 or newer
+## A closer look
+
+| Reader | Import pasted text |
+| --- | --- |
+| ![Reader with local Piper narration controls](docs/assets/screenshots/reader.png) | ![Paste-text import form with synthetic content](docs/assets/screenshots/discover.png) |
+
+| Theme gallery | Responsive library |
+| --- | --- |
+| ![Theme gallery and live preview](docs/assets/screenshots/themes.png) | ![Open Choice Reader library on a mobile viewport](docs/assets/screenshots/library-mobile.png) |
+
+All screenshots use synthetic books, names, and `example.test` URLs.
+
+## Prerequisites
+
+- Python 3.12, 3.13, or 3.14
+- Node.js 22.12 or newer and npm
 - FFmpeg, libsndfile, SoX, and eSpeak NG
-- Linux or WSL is recommended for the bundled host scripts
+- Linux or WSL for the bundled host scripts; Windows PowerShell is supported for development
 
-GPU acceleration is optional. Piper is the base text-to-speech engine; Kokoro, transcription, and Qwen voice cloning are optional installations.
+GPU acceleration is optional. The base install uses Piper; optional engines have additional runtime and model requirements.
 
-The checked-in automation targets Ubuntu/Debian-style Linux or WSL and Windows PowerShell. Other operating systems may work through the manual Python and Node setup, but are not currently covered by project automation.
-
-## Verified quick start on Ubuntu or WSL
-
-From a clean checkout, install the system and application dependencies, build the web interface, and start the loopback-only service:
+## Quick start on Ubuntu or WSL
 
 ```bash
+git clone https://github.com/NotADevIAmaMeatPopsicle/Open-Choice-Reader.git
+cd Open-Choice-Reader
 bash scripts/bootstrap.sh
 (cd frontend && npm run build)
 bash scripts/start.sh
 ```
 
-Open `http://127.0.0.1:8000`, create the first administrator, and use `bash scripts/stop.sh` when finished. The bootstrap downloads a default Piper voice from its upstream source. Review that voice's upstream license before redistributing it.
+Open <http://127.0.0.1:8000>, create the first administrator, and stop the service with:
+
+```bash
+bash scripts/stop.sh
+```
+
+`bootstrap.sh` installs the required Ubuntu/Debian packages, creates `backend/.venv`, installs the application, installs frontend packages, and downloads the default Piper voice. Run `start.sh` as a normal unprivileged user.
 
 ## Development setup
-
-Create the backend environment and install the application with development dependencies:
 
 ```bash
 cd backend
@@ -45,78 +64,80 @@ source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 python -m alembic upgrade head
-```
 
-On Windows PowerShell, activate with `.\.venv\Scripts\Activate.ps1` instead.
-
-Install the frontend dependencies:
-
-```bash
-cd frontend
+cd ../frontend
 npm ci
 ```
 
-Start the development servers on Windows:
+On Windows PowerShell, activate the environment with `.\.venv\Scripts\Activate.ps1`, then launch the development servers from the repository root:
 
 ```powershell
 .\scripts\dev.ps1
 ```
 
-The frontend runs at `http://127.0.0.1:5173` and proxies API calls to the backend at `http://127.0.0.1:8000`.
+The development frontend runs at `http://127.0.0.1:5173` and proxies the API at `http://127.0.0.1:8000`.
 
-## Linux or WSL host setup
-
-The setup script installs system packages, creates `backend/.venv`, installs the base backend, downloads the default Piper voice, and installs frontend dependencies:
+## Build, test, and run
 
 ```bash
-bash scripts/bootstrap.sh
-(cd frontend && npm run build)
-bash scripts/start.sh
-```
-
-Optional engines can be installed by setting `OPEN_CHOICE_READER_EXTRAS` to a comma-separated extras list such as `all`. Set `DOWNLOAD_KOKORO_MODELS=1` to download the default Kokoro model bundle.
-
-The server binds to loopback by default. On Windows, `scripts/start-open-choice-reader.ps1 -Expose` deliberately opens the configured port to the LAN; review [SECURITY.md](SECURITY.md) first.
-
-## Main workflows
-
-- Import local text, Markdown, HTML, EPUB, or PDF documents into a private library.
-- Browse supported public-domain catalogs or import a readable article URL.
-- Read in the web interface, track progress, and generate local speech or export jobs.
-- Install the optional [Chromium extension](browser-extension/README.md) to send a page or selection to the server.
-- Add optional speech engines only when their runtime and model requirements suit the host.
-
-## Configuration
-
-Copy `backend/.env.example` to `backend/.env` and change only the settings you need. Environment variables use the `OPEN_CHOICE_READER_` prefix. See [configuration](docs/configuration.md) for deployment guidance.
-
-Initial administrator creation is accepted from localhost only unless `OPEN_CHOICE_READER_AUTH_BOOTSTRAP_TOKEN` is configured. Set secure cookies and HTTPS before allowing access from another machine.
-
-The live HTTP interface is documented by the backend at `/docs` and `/openapi.json`. See the [API overview](docs/api.md) for its scope and compatibility status. There is no standalone command-line client; the repository scripts are development and self-hosting helpers.
-
-## Tests
-
-```bash
+# Backend
 cd backend
 python -m ruff check app tests
-python -m pytest
+python -m pytest -q
+python -m alembic check
 
+# Frontend
 cd ../frontend
 npm test
 npm run build
 
+# Chromium extension
 cd ../browser-extension
 node --test tests/core.test.mjs
 ```
 
-## Data and model licensing
+After building the frontend, the FastAPI service serves the application and its API from one origin. API documentation is available at `/docs` and `/openapi.json` while the service is running.
 
-Application data, uploaded documents, generated audio, downloaded models, and voice samples are intentionally excluded from Git. Users are responsible for the rights to documents and voice samples they process. Downloaded TTS models and voices retain their own upstream licenses; see [data and privacy](docs/data-and-privacy.md).
+## Configuration
 
-## Project status
+Copy the example and edit only what your installation needs:
 
-Open Choice Reader is pre-release software intended for self-hosting. Review the security guidance before exposing it outside a trusted machine or network.
+```bash
+cp backend/.env.example backend/.env
+```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development expectations, [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards, [SECURITY.md](SECURITY.md) for vulnerability-reporting guidance, the [public source manifest](docs/PUBLIC-SOURCE-MANIFEST.md) for the repository boundary, the [release checklist](docs/PUBLIC-RELEASE-CHECKLIST.md) for approval gates, and the [dependency review](docs/DEPENDENCIES.md) for third-party terms.
+Every backend environment variable begins with `OPEN_CHOICE_READER_`. Keep real secrets out of Git. For a remote HTTPS installation, typical values look like:
 
-Open Choice Reader's original source is licensed under the [Apache License 2.0](LICENSE). Third-party packages, downloaded models, and voice files retain their own licenses. In particular, the base `piper-tts` dependency declares GPL-3.0-or-later; review the dependency guidance before redistributing a combined installation.
+```dotenv
+OPEN_CHOICE_READER_AUTH_BOOTSTRAP_TOKEN=<LONG_RANDOM_TOKEN>
+OPEN_CHOICE_READER_AUTH_SESSION_SECURE=true
+OPEN_CHOICE_READER_CORS_ALLOWED_ORIGINS=https://reader.example.test
+```
+
+The service binds to loopback by default. Read [docs/configuration.md](docs/configuration.md) and [SECURITY.md](SECURITY.md) before allowing another machine to connect.
+
+## Project map
+
+- [`backend/`](backend/README.md): FastAPI API, SQLite models, parsers, speech adapters, and export worker
+- [`frontend/`](frontend/src): React and Vite web interface
+- [`browser-extension/`](browser-extension/README.md): optional unpacked Chromium extension
+- [`scripts/`](scripts): setup, development, start/stop, smoke-test, and release verification helpers
+- [`ARCHITECTURE.md`](ARCHITECTURE.md): runtime design, data flow, and storage boundaries
+- [`docs/api.md`](docs/api.md): API scope and compatibility
+- [`docs/data-and-privacy.md`](docs/data-and-privacy.md): local data and responsible-use guidance
+
+## Current limitations
+
+- There is no packaged desktop application, container image, PyPI package, npm package, or stable release yet.
+- PDF support extracts embedded text; it does not perform OCR.
+- Firefox and Safari extensions are not packaged.
+- The HTTP API may change before the first stable release.
+- Public-internet deployment is not the supported default; use a hardened HTTPS reverse proxy if you choose remote access.
+
+More detail is in [STATUS.md](STATUS.md).
+
+## Contributing and security
+
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities privately using the process in [SECURITY.md](SECURITY.md), not a public issue.
+
+Open Choice Reader's original source is licensed under the [Apache License 2.0](LICENSE). Dependencies, downloaded models, and voice files retain their own licenses. In particular, the base `piper-tts` dependency declares GPL-3.0-or-later; review [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) before redistributing a combined installation.

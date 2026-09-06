@@ -4,6 +4,7 @@ from pathlib import Path
 from sqlalchemy import select
 
 from app import db
+from app.config import settings
 import app.models.document as document_model
 import app.models.job as job_model
 from app.tts.registry import list_engine_statuses
@@ -79,7 +80,10 @@ def get_issue_summary(*, user_id: int | None = None) -> IssueSummaryRecord:
                 )
             )
 
+    configured_engine = settings.tts_engine.strip().lower()
     for engine_status in list_engine_statuses():
+        if engine_status.engine != configured_engine:
+            continue
         if engine_status.availability == "available":
             continue
         issues.append(

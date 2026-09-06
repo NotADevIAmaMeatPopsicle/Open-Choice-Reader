@@ -76,6 +76,7 @@ def test_issues_api_aggregates_export_failures_missing_sources_and_engine_warnin
         job.failure_detail = "Piper binary missing"
 
     issues_module = import_module("app.services.issues")
+    monkeypatch.setattr(settings, "tts_engine", "piper")
     monkeypatch.setattr(
         issues_module,
         "list_engine_statuses",
