@@ -15,6 +15,16 @@ This browser extension targets Chrome, Edge, Brave, Arc, and other Chromium-base
 
 Selecting text on the page is the current "start reading here" workflow.
 
+## Packaging it for the Chrome Web Store
+
+Run `node scripts/package-extension.mjs` from the repository root. It writes
+`dist/extension/open-choice-reader-extension-<version>-chrome.zip` with `manifest.json`
+at the root of the archive, which is what the store expects, and leaves out the tests
+and the documentation files.
+
+`STORE-LISTING.md` holds the listing copy, the permission justifications and the data
+disclosures. `store-assets/` holds the screenshots and the listing icon.
+
 ## Load it in a Chromium-based browser
 
 1. Open your browser's extension management page, for example `chrome://extensions` or `edge://extensions`
